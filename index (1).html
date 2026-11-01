@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Pembelajaran Fungsi Kuadrat</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#1f2937;background:#f3f6fb}
+body{margin:0;padding:24px}.wrap{max-width:1100px;margin:auto}
+header{background:#263b80;color:white;padding:22px 26px;border-radius:16px;margin-bottom:18px}
+h1{margin:0 0 8px;font-size:clamp(1.4rem,3vw,2rem)}header p{margin:0;opacity:.9}
+.layout{display:grid;grid-template-columns:280px 1fr;gap:18px}
+.card{background:white;border-radius:14px;padding:20px;box-shadow:0 5px 18px #17255412}
+label{display:block;margin:14px 0 6px;font-weight:600}
+input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem}
+button{width:100%;margin-top:18px;padding:12px;border:0;border-radius:8px;background:#3049a0;color:white;font-size:1rem;font-weight:bold;cursor:pointer}
+button:hover{background:#203779}.hint{font-size:.86rem;color:#64748b;line-height:1.5}
+canvas{width:100%;height:380px;display:block}
+.results{line-height:1.8;white-space:pre-line;background:#f8fafc;padding:12px;border-radius:8px;margin-top:12px}
+@media(max-width:760px){body{padding:12px}.layout{grid-template-columns:1fr}canvas{height:300px}}
+</style>
+</head>
+<body><div class="wrap">
+<header><h1>Media Pembelajaran Fungsi Kuadrat</h1><p>Eksplorasi grafik f(x) = ax² + bx + c</p></header>
+<div class="layout">
+<section class="card"><h2>Masukan Koefisien</h2>
+<label for="a">Nilai a</label><input id="a" type="number" step="any" value="1">
+<label for="b">Nilai b</label><input id="b" type="number" step="any" value="-4">
+<label for="c">Nilai c</label><input id="c" type="number" step="any" value="3">
+<button id="process">Proses dan gambar grafik</button>
+<p class="hint">Masukkan nilai a, b, dan c, lalu tekan tombol Proses. Nilai a tidak boleh nol karena fungsi harus berbentuk kuadrat.</p>
+</section>
+<section class="card"><h2>Grafik Fungsi Kuadrat</h2><canvas id="graph" aria-label="Grafik fungsi kuadrat"></canvas>
+<h2>Hasil Perhitungan</h2><div class="results" id="results" aria-live="polite">Grafik dan hasil perhitungan akan ditampilkan di sini.</div></section>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+function draw(a,b,c,xp,yp){
+ const canvas=$('graph'),ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.scale(dpr,dpr);
+ const W=rect.width,H=rect.height;
+ let xmin=xp-10,xmax=xp+10;
+ let vals=[];for(let i=0;i<=500;i++){let x=xmin+(xmax-xmin)*i/500;vals.push(a*x*x+b*x+c)}
+ let ymin=Math.min(...vals,0),ymax=Math.max(...vals,0);if(ymax-ymin<1){ymin-=1;ymax+=1}
+ let pad=38; ymin-=(ymax-ymin)*.08;ymax+=(ymax-ymin)*.08;
+ const X=x=>pad+(x-xmin)/(xmax-xmin)*(W-2*pad),Y=y=>H-pad-(y-ymin)/(ymax-ymin)*(H-2*pad);
+ ctx.clearRect(0,0,W,H);ctx.font='12px Arial';ctx.strokeStyle='#e5e7eb';ctx.fillStyle='#64748b';ctx.lineWidth=1;
+ for(let i=0;i<=10;i++){let x=xmin+(xmax-xmin)*i/10,px=X(x);ctx.beginPath();ctx.moveTo(px,pad);ctx.lineTo(px,H-pad);ctx.stroke();ctx.fillText(x.toFixed(1),px-12,H-pad+18)}
+ for(let i=0;i<=8;i++){let y=ymin+(ymax-ymin)*i/8,py=Y(y);ctx.beginPath();ctx.moveTo(pad,py);ctx.lineTo(W-pad,py);ctx.stroke();ctx.fillText(y.toFixed(1),2,py+4)}
+ ctx.strokeStyle='#111827';ctx.lineWidth=1.5;
+ if(ymin<=0&&ymax>=0){ctx.beginPath();ctx.moveTo(pad,Y(0));ctx.lineTo(W-pad,Y(0));ctx.stroke()}
+ if(xmin<=0&&xmax>=0){ctx.beginPath();ctx.moveTo(X(0),pad);ctx.lineTo(X(0),H-pad);ctx.stroke()}
+ ctx.beginPath();ctx.strokeStyle='#dc2626';ctx.lineWidth=2.5;
+ for(let i=0;i<=500;i++){let x=xmin+(xmax-xmin)*i/500,y=a*x*x+b*x+c;i?ctx.lineTo(X(x),Y(y)):ctx.moveTo(X(x),Y(y))}
+ ctx.stroke();ctx.beginPath();ctx.fillStyle='#2563eb';ctx.arc(X(xp),Y(yp),5,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#1d4ed8';ctx.fillText('Titik puncak',Math.min(X(xp)+8,W-90),Math.max(Y(yp)-8,14));
+}
+function process(){
+ const a=Number($('a').value),b=Number($('b').value),c=Number($('c').value);
+ if(!Number.isFinite(a)||!Number.isFinite(b)||!Number.isFinite(c)){alert('Masukkan angka yang valid.');return}
+ if(a===0){alert('Koefisien a tidak boleh nol!');return}
+ const xp=-b/(2*a),yp=a*xp*xp+b*xp+c,D=b*b-4*a*c;
+ let tx;if(D>0){let x1=(-b+Math.sqrt(D))/(2*a),x2=(-b-Math.sqrt(D))/(2*a);tx=`(${x1.toFixed(2)}, 0) dan (${x2.toFixed(2)}, 0)`}
+ else if(Math.abs(D)<1e-12)tx=`(${xp.toFixed(2)}, 0)`;else tx='Tidak memotong sumbu X';
+ const fmt=n=>Number(n).toFixed(2),sign=n=>n<0?'−':'+';
+ const equation=`f(x) = ${fmt(a)}x² ${sign(b)} ${fmt(Math.abs(b))}x ${sign(c)} ${fmt(Math.abs(c))}`;
+ $('results').textContent=`Persamaan: ${equation}\nTitik puncak: (${fmt(xp)}, ${fmt(yp)})\nSumbu simetri: x = ${fmt(xp)}\nDiskriminan: ${fmt(D)}\nPotong sumbu X: ${tx}\nPotong sumbu Y: (0, ${fmt(c)})\nArah parabola: ${a>0?'Terbuka ke atas':'Terbuka ke bawah'}`;
+ draw(a,b,c,xp,yp);
+}
+$('process').addEventListener('click',process);window.addEventListener('resize',process);process();
+</script></body></html>
